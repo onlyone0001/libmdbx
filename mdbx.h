@@ -2921,6 +2921,21 @@ MDBX_NOTHROW_PURE_FUNCTION LIBMDBX_API int mdbx_txn_flags(const MDBX_txn *txn);
 MDBX_NOTHROW_PURE_FUNCTION LIBMDBX_API uint64_t
 mdbx_txn_id(const MDBX_txn *txn);
 
+/** \brief Latence of commit stages in 1/65536 of seconds units. */
+struct MDBX_commit_latency {
+  uint32_t preparation_16dot16;
+  uint32_t gc_16dot16;
+  uint32_t write_16dot16;
+  uint32_t sync_16dot16;
+  uint32_t whole_16dot16;
+};
+#ifndef __cplusplus
+/** \ingroup c_statinfo */
+typedef struct MDBX_commit_latency MDBX_commit_latency;
+#endif
+
+LIBMDBX_API int mdbx_txn_commit_ex(MDBX_txn *txn, MDBX_commit_latency *latency);
+
 /** \brief Commit all the operations of a transaction into the database.
  * \ingroup c_transactions
  *
@@ -2958,7 +2973,9 @@ mdbx_txn_id(const MDBX_txn *txn);
  * \retval MDBX_ENOSPC           No more disk space.
  * \retval MDBX_EIO              A system-level I/O error occurred.
  * \retval MDBX_ENOMEM           Out of memory. */
-LIBMDBX_API int mdbx_txn_commit(MDBX_txn *txn);
+LIBMDBX_INLINE_API(int, mdbx_txn_commit, (MDBX_txn * txn)) {
+  return mdbx_txn_commit_ex(txn, NULL);
+}
 
 /** \brief Abandon all the operations of the transaction instead of saving them.
  * \ingroup c_transactions
